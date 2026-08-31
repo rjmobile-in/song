@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <style>
+    /* Tap Highlight Blocked for Native App Feel */
     *, *::before, *::after { 
       box-sizing: border-box; 
       margin: 0; 
@@ -54,6 +55,7 @@
       align-items: center;
       padding: 24px 16px 48px;
       -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none; /* Block Swipe-to-Refresh */
     }
 
     h1, h2, h3, .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -76,16 +78,11 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-md);
     }
+    
     .brand-group { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-      width: 44px; height: 44px;
-      background: var(--primary-alpha);
-      border: 1px solid var(--primary);
-      border-radius: var(--radius-md);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; color: var(--primary);
-    }
+    
     .brand-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    
     .loop-badge {
       font-size: 11px;
       font-weight: 700;
@@ -114,6 +111,7 @@
       align-items: center;
       justify-content: space-between;
     }
+    
     .track-badge {
       background: var(--input-bg);
       color: var(--text-soft);
@@ -137,9 +135,7 @@
       border-radius: 4px;
       transition: height 0.15s ease;
     }
-    .playing .bar {
-      animation: bounce 0.6s infinite ease-in-out alternate;
-    }
+    .playing .bar { animation: bounce 0.6s infinite ease-in-out alternate; }
     .playing .bar:nth-child(2) { animation-delay: 0.15s; }
     .playing .bar:nth-child(3) { animation-delay: 0.3s; }
     .playing .bar:nth-child(4) { animation-delay: 0.45s; }
@@ -148,6 +144,7 @@
     .track-meta { text-align: center; margin: 4px 0; }
     .track-title { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
 
+    /* YouTube Style Progress Bar */
     .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
     .progress-bar {
       width: 100%;
@@ -185,6 +182,7 @@
     .progress-bar.dragging .progress-fill::after {
       transform: translateY(-50%) scale(1);
     }
+    
     .time-row {
       display: flex;
       justify-content: space-between;
@@ -251,11 +249,9 @@
       transition: all 0.2s;
     }
     .track-item:hover { border-color: var(--primary); transform: translateX(3px); }
-    .track-item.active {
-      background: var(--primary-alpha);
-      border-color: var(--primary);
-    }
+    .track-item.active { background: var(--primary-alpha); border-color: var(--primary); }
     .track-item.active .t-name { color: var(--primary); font-weight: 700; }
+    
     .t-left { display: flex; align-items: center; gap: 12px; }
     .t-num { font-size: 13px; font-weight: 800; color: var(--text-soft); width: 22px; }
     .t-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
@@ -271,7 +267,7 @@
         <img src="logo.png" alt="RJ Mobile Logo" style="width: 44px; height: 44px; object-fit: contain; border-radius: 8px;">
         <div>
           <div class="brand-title">RJ Mobile</div>
-          <div style="font-size: 11px; color: var(--text-soft); font-weight: 600;">Smart Phone, Smart Choice</div>
+          <div style="font-size: 11px; color: var(--text-soft); font-weight: 600;">Store Audio Broadcaster</div>
         </div>
       </div>
       <div class="loop-badge">🔁 Auto-Loop</div>
@@ -313,7 +309,7 @@
       </div>
 
       <div class="track-list" id="track-list-container">
-        <div style="text-align: center; color: var(--text-soft); padding: 20px;">Fetching songs...</div>
+        <div style="text-align: center; color: var(--text-soft); padding: 20px;">Fetching songs from GitHub...</div>
       </div>
     </div>
 
@@ -376,14 +372,11 @@
         loadTrack(0);
 
       } catch (err) {
-        playlist = Array.from({ length: 10 }, (_, i) => ({
-          id: i + 1,
-          title: `Track ${i + 1}`,
-          src: `songs/track${i + 1}.mp3`
-        }));
-        trackCountText.innerText = `10 Tracks`;
-        renderPlaylist();
-        loadTrack(0);
+        console.error("API scan failed:", err);
+        playlist = [];
+        playerTitle.innerText = "Error scanning folder";
+        trackCountText.innerText = `0 Tracks`;
+        trackListContainer.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 20px;">Could not load songs. Please run on GitHub Pages.</div>';
       }
     }
 
@@ -412,7 +405,7 @@
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: track.title,
-          artist: 'RJ Mobile',
+          artist: 'RJ Mobile Offers',
           album: 'Store Audio Broadcaster',
           artwork: [{ src: 'logo.png', sizes: '512x512', type: 'image/png' }]
         });
@@ -428,7 +421,7 @@
           visualizer.classList.add('playing');
           renderPlaylist();
         }).catch(() => {
-          alert("Audio playback failed. Please make sure songs are uploaded in the 'songs/' folder.");
+          console.warn("Audio playback delayed by browser.");
         });
       } else {
         audio.pause();
@@ -563,9 +556,37 @@
       navigator.mediaSession.setActionHandler('nexttrack', playNext);
     }
 
-    // Initialize App
+    // Initialize Base Data
     requestWakeLock();
     loadSongsFromGitHub();
+
+    // Spacebar to Play/Pause (Laptop/PC)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault(); 
+        togglePlay();
+      }
+    });
+
+    // ==========================================
+    // 🚀 SMART AUTO-PLAY
+    // ==========================================
+    audio.addEventListener('canplay', function autoStart() {
+      audio.play().then(() => {
+        isPlaying = true;
+        btnPlay.innerText = '⏸';
+        visualizer.classList.add('playing');
+        renderPlaylist();
+      }).catch(() => {
+        console.log("Autoplay blocked. Waiting for first screen tap.");
+        document.body.addEventListener('click', function firstClick() {
+          if (!isPlaying) togglePlay();
+          document.body.removeEventListener('click', firstClick);
+        }, { once: true });
+      });
+      audio.removeEventListener('canplay', autoStart); 
+    });
+
   </script>
 </body>
 </html>
