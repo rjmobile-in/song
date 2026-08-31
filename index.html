@@ -23,6 +23,10 @@
       -webkit-tap-highlight-color: transparent; 
     }
 
+    html, body {
+      overscroll-behavior-y: none; /* Block Swipe-to-Refresh on Chrome/Safari */
+    }
+
     :root {
       --bg-base: #0a1023;
       --bg-surface: #121b33;
@@ -55,7 +59,6 @@
       align-items: center;
       padding: 24px 16px 48px;
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: none; /* Block Swipe-to-Refresh */
     }
 
     h1, h2, h3, .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -586,6 +589,32 @@
       });
       audio.removeEventListener('canplay', autoStart); 
     });
+
+    // ==========================================
+    // 🛑 BLOCK PULL-TO-REFRESH (100% Bulletproof)
+    // ==========================================
+    let touchStartY = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+      const touchY = e.touches[0].clientY;
+      const touchDiff = touchY - touchStartY;
+      
+      // Agar user upar se neeche swipe kar raha hai aur page top par hai
+      if (touchDiff > 0 && window.scrollY <= 0) {
+        // Agar vo playlist scroll nahi kar raha hai, toh refresh block kar do
+        if (!e.target.closest('.track-list')) {
+          e.preventDefault();
+        } else {
+          // Agar playlist area top par aa chuka hai, toh usko bhi block kar do
+          if (trackListContainer.scrollTop <= 0) {
+            e.preventDefault();
+          }
+        }
+      }
+    }, { passive: false });
 
   </script>
 </body>
