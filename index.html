@@ -146,20 +146,39 @@
     .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
     .progress-bar {
       width: 100%;
-      height: 8px;
+      height: 6px;
       background: var(--input-bg);
       border: 1px solid var(--card-border);
       border-radius: 10px;
       cursor: pointer;
       position: relative;
-      overflow: hidden;
     }
     .progress-fill {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, var(--primary) 0%, #ff8a3d 100%);
       border-radius: 10px;
-      transition: width 0.1s linear;
+      position: relative;
+    }
+    /* YouTube Style Dot */
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%) scale(0);
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+    }
+    .progress-bar:hover .progress-fill::after,
+    .progress-bar.dragging .progress-fill::after {
+      transform: translateY(-50%) scale(1);
     }
     .time-row {
       display: flex;
@@ -383,6 +402,16 @@
       currentBadge.innerText = `Track ${track.id} of ${playlist.length}`;
       audio.src = track.src;
       renderPlaylist();
+
+      // Background Playback Metadata (Lock-screen par details dikhane ke liye)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: 'RJ Mobile',
+          album: 'Store Audio Broadcaster',
+          artwork: [{ src: 'logo.png', sizes: '512x512', type: 'image/png' }]
+        });
+      }
     }
 
     function togglePlay() {
@@ -438,10 +467,63 @@
     btnNext.addEventListener('click', playNext);
     btnPrev.addEventListener('click', playPrev);
 
-    audio.addEventListener('timeupdate', () => {
+    // ==========================================
+    // 🎚️ ADVANCED SLIDER (DRAG & DROP)
+    // ==========================================
+    let isDragging = false;
+
+    function updateProgressUI(clientX) {
+      const rect = progressBar.getBoundingClientRect();
+      let clickX = clientX - rect.left;
+      clickX = Math.max(0, Math.min(clickX, rect.width));
+      const percent = (clickX / rect.width) * 100;
+      progressFill.style.width = `${percent}%`;
+      
       if (audio.duration) {
-        const percent = (audio.currentTime / audio.duration) * 100;
-        progressFill.style.width = `${percent}%`;
+        timeCurrent.innerText = formatTime((clickX / rect.width) * audio.duration);
+      }
+      return clickX / rect.width;
+    }
+
+    // Mouse Dragging (Laptop/PC)
+    progressBar.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      progressBar.classList.add('dragging');
+      updateProgressUI(e.clientX);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) updateProgressUI(e.clientX);
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (isDragging) {
+        isDragging = false;
+        progressBar.classList.remove('dragging');
+        if (audio.duration) audio.currentTime = updateProgressUI(e.clientX) * audio.duration;
+      }
+    });
+
+    // Touch Dragging (Mobile)
+    progressBar.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      progressBar.classList.add('dragging');
+      updateProgressUI(e.touches[0].clientX);
+    });
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging) updateProgressUI(e.touches[0].clientX);
+    });
+    window.addEventListener('touchend', () => {
+      if (isDragging) {
+        isDragging = false;
+        progressBar.classList.remove('dragging');
+        if (audio.duration) {
+          audio.currentTime = (parseFloat(progressFill.style.width) / 100) * audio.duration;
+        }
+      }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration && !isDragging) {
+        progressFill.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
         timeCurrent.innerText = formatTime(audio.currentTime);
         timeTotal.innerText = formatTime(audio.duration);
       }
@@ -449,13 +531,35 @@
 
     audio.addEventListener('ended', playNext);
 
-    progressBar.addEventListener('click', (e) => {
-      const rect = progressBar.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const width = rect.width;
-      audio.currentTime = (clickX / width) * audio.duration;
+    // ==========================================
+    // 🔋 KEEP SCREEN AWAKE (WAKELOCK API)
+    // ==========================================
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.log("WakeLock error:", err);
+      }
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
     });
 
+    // ==========================================
+    // 🎧 BACKGROUND PLAYBACK (MEDIA SESSION)
+    // ==========================================
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', togglePlay);
+      navigator.mediaSession.setActionHandler('pause', togglePlay);
+      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+    }
+
+    // Initialize App
+    requestWakeLock();
     loadSongsFromGitHub();
   </script>
 </body>
