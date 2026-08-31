@@ -296,9 +296,9 @@
       </div>
 
       <div class="controls-row">
-        <button class="btn-ctrl" id="btn-prev">⏮</button>
-        <button class="btn-ctrl btn-play-main" id="btn-play">▶</button>
-        <button class="btn-ctrl" id="btn-next">⏭</button>
+        <button class="btn-ctrl" id="btn-prev" title="Previous Track">⏮</button>
+        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause">▶</button>
+        <button class="btn-ctrl" id="btn-next" title="Next Track">⏭</button>
       </div>
     </div>
 
@@ -315,7 +315,9 @@
 
   </div>
 
+  <!-- Audio Engine & Preloader Engine -->
   <audio id="audio-engine" preload="auto"></audio>
+  <audio id="audio-preloader" preload="auto"></audio>
 
   <script>
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
@@ -327,6 +329,8 @@
     let isPlaying = false;
 
     const audio = document.getElementById('audio-engine');
+    const preloader = document.getElementById('audio-preloader');
+    
     const btnPlay = document.getElementById('btn-play');
     const btnNext = document.getElementById('btn-next');
     const btnPrev = document.getElementById('btn-prev');
@@ -372,6 +376,7 @@
         loadTrack(0);
 
       } catch (err) {
+        console.error("API scan failed:", err);
         playlist = [];
         playerTitle.innerText = "Error scanning folder";
         trackCountText.innerText = `0 Tracks`;
@@ -400,6 +405,7 @@
       audio.src = track.src;
       renderPlaylist();
 
+      // Background Metadata
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: track.title,
@@ -408,6 +414,13 @@
           artwork: [{ src: 'logo.png', sizes: '512x512', type: 'image/png' }]
         });
       }
+
+      // =====================================
+      // 🚀 BACKGROUND PRELOADER ENGINE
+      // =====================================
+      // Load agla gaana chupchaap taaki next hone par delay na aaye
+      const nextIndex = (currentTrackIndex + 1) % playlist.length;
+      preloader.src = playlist[nextIndex].src;
     }
 
     function togglePlay() {
@@ -518,6 +531,7 @@
       }
     });
 
+    // Auto Play Next instantly
     audio.addEventListener('ended', playNext);
 
     let wakeLock = null;
