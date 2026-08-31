@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>RJ Mobile | Audio Broadcaster</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+
+  <meta name="theme-color" content="#0a1023" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #0a1023;
+      --bg-surface: #121b33;
+      --card-bg: #121b33;
+      --card-bg-alpha: rgba(18, 27, 51, 0.85);
+      --card-border: #1e2d4a;
+
+      --primary: #f37021;
+      --primary-hover: #d9621a;
+      --primary-alpha: rgba(243, 112, 33, 0.15);
+      --primary-glow: rgba(243, 112, 33, 0.35);
+
+      --text-main: #f8fafc;
+      --text-soft: #94a3b8;
+
+      --input-bg: #070c1b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    .brand-group { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: var(--primary-alpha);
+      border: 1px solid var(--primary);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--primary);
+    }
+    .brand-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .loop-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-alpha);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--primary);
+      text-transform: uppercase;
+    }
+
+    .player-card {
+      background: var(--card-bg-alpha);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .now-playing-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .track-badge {
+      background: var(--input-bg);
+      color: var(--text-soft);
+      border: 1px solid var(--card-border);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 22px;
+    }
+    .bar {
+      width: 4px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: height 0.15s ease;
+    }
+    .playing .bar {
+      animation: bounce 0.6s infinite ease-in-out alternate;
+    }
+    .playing .bar:nth-child(2) { animation-delay: 0.15s; }
+    .playing .bar:nth-child(3) { animation-delay: 0.3s; }
+    .playing .bar:nth-child(4) { animation-delay: 0.45s; }
+    @keyframes bounce { 0% { height: 4px; } 100% { height: 20px; } }
+
+    .track-meta { text-align: center; margin: 4px 0; }
+    .track-title { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
+
+    .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary) 0%, #ff8a3d 100%);
+      border-radius: 10px;
+      transition: width 0.1s linear;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-soft);
+      font-family: monospace;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .btn-ctrl {
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+    .btn-ctrl:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
+    .btn-play-main {
+      width: 68px; height: 68px;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-size: 26px;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+    .btn-play-main:hover { background: var(--primary-hover); transform: scale(1.08); }
+
+    .playlist-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+    }
+    .playlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .playlist-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .track-count-badge { font-size: 12px; color: var(--primary); font-weight: 700; }
+
+    .track-list { display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; }
+    .track-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .track-item:hover { border-color: var(--primary); transform: translateX(3px); }
+    .track-item.active {
+      background: var(--primary-alpha);
+      border-color: var(--primary);
+    }
+    .track-item.active .t-name { color: var(--primary); font-weight: 700; }
+    .t-left { display: flex; align-items: center; gap: 12px; }
+    .t-num { font-size: 13px; font-weight: 800; color: var(--text-soft); width: 22px; }
+    .t-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .t-status { font-size: 13px; font-weight: 700; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header class="header">
+      <div class="brand-group">
+        <div class="brand-icon">📱</div>
+        <div>
+          <div class="brand-title">RJ Mobile</div>
+          <div style="font-size: 11px; color: var(--text-soft); font-weight: 600;">Smart Phone, Smart Choice</div>
+        </div>
+      </div>
+      <div class="loop-badge">🔁 Auto-Loop</div>
+    </header>
+
+    <div class="player-card">
+      <div class="now-playing-banner">
+        <span class="track-badge" id="current-badge">Loading...</span>
+        <div class="visualizer" id="visualizer">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+      </div>
+
+      <div class="track-meta">
+        <div class="track-title" id="player-title">Scanning audio tracks...</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="time-row">
+          <span id="time-current">0:00</span>
+          <span id="time-total">0:00</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn-ctrl" id="btn-prev" title="Previous Track">⏮</button>
+        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause">▶</button>
+        <button class="btn-ctrl" id="btn-next" title="Next Track">⏭</button>
+      </div>
+    </div>
+
+    <div class="playlist-section">
+      <div class="playlist-header">
+        <div class="playlist-title">Playlist</div>
+        <div class="track-count-badge" id="track-count-text">0 Tracks</div>
+      </div>
+
+      <div class="track-list" id="track-list-container">
+        <div style="text-align: center; color: var(--text-soft); padding: 20px;">Fetching songs...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <audio id="audio-engine" preload="auto"></audio>
+
+  <script>
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const repoOwner = window.location.hostname.split('.')[0] || "YOUR_GITHUB_USERNAME";
+    const repoName = pathSegments[0] || "YOUR_REPO_NAME";
+
+    let playlist = [];
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+
+    const audio = document.getElementById('audio-engine');
+    const btnPlay = document.getElementById('btn-play');
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+    const playerTitle = document.getElementById('player-title');
+    const currentBadge = document.getElementById('current-badge');
+    const progressFill = document.getElementById('progress-fill');
+    const progressBar = document.getElementById('progress-bar');
+    const timeCurrent = document.getElementById('time-current');
+    const timeTotal = document.getElementById('time-total');
+    const visualizer = document.getElementById('visualizer');
+    const trackListContainer = document.getElementById('track-list-container');
+    const trackCountText = document.getElementById('track-count-text');
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds === 0) return "0:00";
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    async function loadSongsFromGitHub() {
+      try {
+        const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/songs`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error("Could not fetch repo contents");
+        const data = await res.json();
+
+        playlist = data
+          .filter(item => item.type === "file" && /\.(mp3|wav|m4a|ogg)$/i.test(item.name))
+          .map((item, index) => {
+            const cleanTitle = item.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+            return {
+              id: index + 1,
+              title: cleanTitle,
+              src: item.download_url || `songs/${item.name}`
+            };
+          });
+
+        if (playlist.length === 0) throw new Error("No audio files found");
+
+        trackCountText.innerText = `${playlist.length} Tracks`;
+        renderPlaylist();
+        loadTrack(0);
+
+      } catch (err) {
+        playlist = Array.from({ length: 10 }, (_, i) => ({
+          id: i + 1,
+          title: `Track ${i + 1}`,
+          src: `songs/track${i + 1}.mp3`
+        }));
+        trackCountText.innerText = `10 Tracks`;
+        renderPlaylist();
+        loadTrack(0);
+      }
+    }
+
+    function renderPlaylist() {
+      trackListContainer.innerHTML = playlist.map((t, idx) => `
+        <div class="track-item ${idx === currentTrackIndex ? 'active' : ''}" onclick="selectTrack(${idx})">
+          <div class="t-left">
+            <span class="t-num">${t.id}</span>
+            <div class="t-name">${t.title}</div>
+          </div>
+          <div class="t-status">${idx === currentTrackIndex && isPlaying ? '🔊' : '▶'}</div>
+        </div>
+      `).join('');
+    }
+
+    function loadTrack(index) {
+      if (!playlist.length) return;
+      currentTrackIndex = index;
+      const track = playlist[currentTrackIndex];
+      playerTitle.innerText = track.title;
+      currentBadge.innerText = `Track ${track.id} of ${playlist.length}`;
+      audio.src = track.src;
+      renderPlaylist();
+    }
+
+    function togglePlay() {
+      if (!audio.src && playlist.length) loadTrack(currentTrackIndex);
+      if (audio.paused) {
+        audio.play().then(() => {
+          isPlaying = true;
+          btnPlay.innerText = '⏸';
+          visualizer.classList.add('playing');
+          renderPlaylist();
+        }).catch(() => {
+          alert("Audio playback failed. Please make sure songs are uploaded in the 'songs/' folder.");
+        });
+      } else {
+        audio.pause();
+        isPlaying = false;
+        btnPlay.innerText = '▶';
+        visualizer.classList.remove('playing');
+        renderPlaylist();
+      }
+    }
+
+    function selectTrack(index) {
+      loadTrack(index);
+      audio.play().then(() => {
+        isPlaying = true;
+        btnPlay.innerText = '⏸';
+        visualizer.classList.add('playing');
+        renderPlaylist();
+      });
+    }
+
+    function playNext() {
+      if (!playlist.length) return;
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex);
+      audio.play();
+      btnPlay.innerText = '⏸';
+      visualizer.classList.add('playing');
+      renderPlaylist();
+    }
+
+    function playPrev() {
+      if (!playlist.length) return;
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex);
+      audio.play();
+      visualizer.classList.add('playing');
+      renderPlaylist();
+    }
+
+    btnPlay.addEventListener('click', togglePlay);
+    btnNext.addEventListener('click', playNext);
+    btnPrev.addEventListener('click', playPrev);
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${percent}%`;
+        timeCurrent.innerText = formatTime(audio.currentTime);
+        timeTotal.innerText = formatTime(audio.duration);
+      }
+    });
+
+    audio.addEventListener('ended', playNext);
+
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const width = rect.width;
+      audio.currentTime = (clickX / width) * audio.duration;
+    });
+
+    loadSongsFromGitHub();
+  </script>
+</body>
+</html>
