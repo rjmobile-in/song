@@ -15,7 +15,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <style>
-    /* Tap Highlight Blocked for Native App Feel */
     *, *::before, *::after { 
       box-sizing: border-box; 
       margin: 0; 
@@ -24,7 +23,7 @@
     }
 
     html, body {
-      overscroll-behavior-y: none; /* Block Swipe-to-Refresh on Chrome/Safari */
+      overscroll-behavior-y: none;
     }
 
     :root {
@@ -147,7 +146,6 @@
     .track-meta { text-align: center; margin: 4px 0; }
     .track-title { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
 
-    /* YouTube Style Progress Bar */
     .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
     .progress-bar {
       width: 100%;
@@ -165,7 +163,6 @@
       border-radius: 10px;
       position: relative;
     }
-    /* YouTube Style Dot */
     .progress-fill::after {
       content: '';
       position: absolute;
@@ -299,9 +296,9 @@
       </div>
 
       <div class="controls-row">
-        <button class="btn-ctrl" id="btn-prev" title="Previous Track">⏮</button>
-        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause">▶</button>
-        <button class="btn-ctrl" id="btn-next" title="Next Track">⏭</button>
+        <button class="btn-ctrl" id="btn-prev">⏮</button>
+        <button class="btn-ctrl btn-play-main" id="btn-play">▶</button>
+        <button class="btn-ctrl" id="btn-next">⏭</button>
       </div>
     </div>
 
@@ -375,7 +372,6 @@
         loadTrack(0);
 
       } catch (err) {
-        console.error("API scan failed:", err);
         playlist = [];
         playerTitle.innerText = "Error scanning folder";
         trackCountText.innerText = `0 Tracks`;
@@ -404,7 +400,6 @@
       audio.src = track.src;
       renderPlaylist();
 
-      // Background Playback Metadata (Lock-screen par details dikhane ke liye)
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: track.title,
@@ -423,9 +418,7 @@
           btnPlay.innerText = '⏸';
           visualizer.classList.add('playing');
           renderPlaylist();
-        }).catch(() => {
-          console.warn("Audio playback delayed by browser.");
-        });
+        }).catch(() => {});
       } else {
         audio.pause();
         isPlaying = false;
@@ -468,9 +461,6 @@
     btnNext.addEventListener('click', playNext);
     btnPrev.addEventListener('click', playPrev);
 
-    // ==========================================
-    // 🎚️ ADVANCED SLIDER (DRAG & DROP)
-    // ==========================================
     let isDragging = false;
 
     function updateProgressUI(clientX) {
@@ -486,7 +476,6 @@
       return clickX / rect.width;
     }
 
-    // Mouse Dragging (Laptop/PC)
     progressBar.addEventListener('mousedown', (e) => {
       isDragging = true;
       progressBar.classList.add('dragging');
@@ -503,7 +492,6 @@
       }
     });
 
-    // Touch Dragging (Mobile)
     progressBar.addEventListener('touchstart', (e) => {
       isDragging = true;
       progressBar.classList.add('dragging');
@@ -532,26 +520,18 @@
 
     audio.addEventListener('ended', playNext);
 
-    // ==========================================
-    // 🔋 KEEP SCREEN AWAKE (WAKELOCK API)
-    // ==========================================
     let wakeLock = null;
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
           wakeLock = await navigator.wakeLock.request('screen');
         }
-      } catch (err) {
-        console.log("WakeLock error:", err);
-      }
+      } catch (err) {}
     }
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') requestWakeLock();
     });
 
-    // ==========================================
-    // 🎧 BACKGROUND PLAYBACK (MEDIA SESSION)
-    // ==========================================
     if ('mediaSession' in navigator) {
       navigator.mediaSession.setActionHandler('play', togglePlay);
       navigator.mediaSession.setActionHandler('pause', togglePlay);
@@ -559,11 +539,9 @@
       navigator.mediaSession.setActionHandler('nexttrack', playNext);
     }
 
-    // Initialize Base Data
     requestWakeLock();
     loadSongsFromGitHub();
 
-    // Spacebar to Play/Pause (Laptop/PC)
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault(); 
@@ -571,28 +549,6 @@
       }
     });
 
-    // ==========================================
-    // 🚀 SMART AUTO-PLAY
-    // ==========================================
-    audio.addEventListener('canplay', function autoStart() {
-      audio.play().then(() => {
-        isPlaying = true;
-        btnPlay.innerText = '⏸';
-        visualizer.classList.add('playing');
-        renderPlaylist();
-      }).catch(() => {
-        console.log("Autoplay blocked. Waiting for first screen tap.");
-        document.body.addEventListener('click', function firstClick() {
-          if (!isPlaying) togglePlay();
-          document.body.removeEventListener('click', firstClick);
-        }, { once: true });
-      });
-      audio.removeEventListener('canplay', autoStart); 
-    });
-
-    // ==========================================
-    // 🛑 BLOCK PULL-TO-REFRESH (100% Bulletproof)
-    // ==========================================
     let touchStartY = 0;
     document.addEventListener('touchstart', (e) => {
       touchStartY = e.touches[0].clientY;
@@ -602,13 +558,10 @@
       const touchY = e.touches[0].clientY;
       const touchDiff = touchY - touchStartY;
       
-      // Agar user upar se neeche swipe kar raha hai aur page top par hai
       if (touchDiff > 0 && window.scrollY <= 0) {
-        // Agar vo playlist scroll nahi kar raha hai, toh refresh block kar do
         if (!e.target.closest('.track-list')) {
           e.preventDefault();
         } else {
-          // Agar playlist area top par aa chuka hai, toh usko bhi block kar do
           if (trackListContainer.scrollTop <= 0) {
             e.preventDefault();
           }
