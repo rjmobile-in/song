@@ -346,8 +346,10 @@
 
     function formatTime(seconds) {
       if (isNaN(seconds) || seconds === 0) return "0:00";
-      const m = Math.floor(seconds / 60);
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
       const s = Math.floor(seconds % 60);
+      if (h > 0) return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
@@ -371,9 +373,23 @@
 
         if (playlist.length === 0) throw new Error("No audio files found");
 
-        trackCountText.innerText = `${playlist.length} Tracks`;
+        trackCountText.innerText = `${playlist.length} Tracks • Calculating...`;
         renderPlaylist();
         loadTrack(0);
+
+        // Background engine to fetch all durations parallelly
+        Promise.all(playlist.map(track => {
+          return new Promise(resolve => {
+            const tempAudio = new Audio();
+            tempAudio.preload = "metadata"; // Sirf metadata layega, full file nahi
+            tempAudio.src = track.src;
+            tempAudio.onloadedmetadata = () => resolve(tempAudio.duration);
+            tempAudio.onerror = () => resolve(0); // Error aaye toh skip
+          });
+        })).then(durations => {
+          const totalSeconds = durations.reduce((acc, curr) => acc + curr, 0);
+          trackCountText.innerText = `${playlist.length} Tracks • ${formatTime(totalSeconds)}`;
+        });
 
       } catch (err) {
         console.error("API scan failed:", err);
