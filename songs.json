@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": 1,
+    "title": "Ek Hi Naam Yaad Aaye",
+    "src": "songs/Ek_Hi_Naam_Yaad_Aaye.mp3",
+    "duration": 190
+  },
+  {
+    "id": 2,
+    "title": "Jaipur Ka Mega Dhamaka",
+    "src": "songs/Jaipur_Ka_Mega_Dhamaka.mp3",
+    "duration": 183
+  },
+  {
+    "id": 3,
+    "title": "Jaipur Ki Sabse Badi Deal",
+    "src": "songs/Jaipur_Ki_Sabse_Badi_Deal.mp3",
+    "duration": 180
+  },
+  {
+    "id": 4,
+    "title": "Jaipur Walon Lets Go",
+    "src": "songs/Jaipur_Walon_Lets_Go.mp3",
+    "duration": 170
+  },
+  {
+    "id": 5,
+    "title": "RJ Mobile Mela",
+    "src": "songs/RJ_Mobile_Mela.mp3",
+    "duration": 141
+  },
+  {
+    "id": 6,
+    "title": "Sabki Pehli Taiyari",
+    "src": "songs/Sabki_Pehli_Taiyari.mp3",
+    "duration": 29
+  },
+  {
+    "id": 7,
+    "title": "Sabse Best Deal Laaye",
+    "src": "songs/Sabse_Best_Deal_Laaye.mp3",
+    "duration": 227
+  }
+]

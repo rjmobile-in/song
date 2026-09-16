@@ -1,5 +1,5 @@
 import { initBranch, getBranchName } from './branch.js';
-import { initSupabase, logPlayEvent } from './supabase.js';
+import { initSupabase, logPlayEvent, getSupabaseClient } from './supabase.js';
 
 let playlist = [];
 let currentTrackIndex = 0;

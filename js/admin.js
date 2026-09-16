@@ -1,7 +1,8 @@
 const SUPABASE_URL = 'https://kngchiisfcezqmrptvvt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZ2NoaWlzZmNlenFtcnB0dnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MzEwMjMsImV4cCI6MjEwNTEwNzAyM30.8NBI8yaNADciacAQsF18WYUbvRkSxZa7fNthhqT9MVQ';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Naam badal kar 'supabaseClient' kar diya taaki clash na ho
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let logs = [];
 let realtimeChannel = null;
@@ -141,7 +142,7 @@ async function fetchLogs() {
   activityBody.innerHTML =
     '<tr><td colspan="4" class="loading-text">Loading activity...</td></tr>';
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('play_logs')
     .select('*')
     .order('timestamp', { ascending: false })
@@ -161,7 +162,7 @@ async function fetchLogs() {
 function subscribeRealtime() {
   if (realtimeChannel) return;
 
-  realtimeChannel = supabase
+  realtimeChannel = supabaseClient
     .channel('admin-play-logs')
     .on(
       'postgres_changes',
@@ -177,7 +178,7 @@ function subscribeRealtime() {
 
 function unsubscribeRealtime() {
   if (realtimeChannel) {
-    supabase.removeChannel(realtimeChannel);
+    supabaseClient.removeChannel(realtimeChannel);
     realtimeChannel = null;
   }
 }
@@ -203,7 +204,7 @@ async function handleLogin(e) {
   btnLogin.disabled = true;
   btnLogin.textContent = 'Signing in...';
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   btnLogin.disabled = false;
   btnLogin.textContent = 'Login';
@@ -215,7 +216,7 @@ async function handleLogin(e) {
 
 async function handleLogout() {
   unsubscribeRealtime();
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   showLogin();
   loginForm.reset();
 }
@@ -224,7 +225,7 @@ async function init() {
   loginForm.addEventListener('submit', handleLogin);
   btnLogout.addEventListener('click', handleLogout);
 
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (event === 'INITIAL_SESSION') {
       if (session) await onAuthenticated();
       else showLogin();

@@ -7,6 +7,6 @@
     "generate-playlist": "node scripts/generate_playlist.js"
   },
   "dependencies": {
-    "music-metadata": "^10.9.0"
+    "music-metadata": "^11.15.0"
   }
 }

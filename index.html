@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json" />
 
   <meta name="theme-color" content="#0a1023" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -95,22 +95,28 @@
       <p>Select your store branch so playback analytics are tracked correctly.</p>
 
       <div class="branch-form">
-        <select class="branch-select" id="branch-select" aria-label="Store branch">
-          <option value="" disabled selected>Select your branch...</option>
-        </select>
+        
+        <!-- Premium Branch List -->
+        <div class="branch-list" id="branch-list">
+          <!-- Buttons will be injected here by JS -->
+        </div>
 
         <p class="branch-error" id="branch-error"></p>
 
-        <button type="button" class="btn-branch-save" id="btn-branch-save">Continue</button>
+        <button type="button" class="btn-branch-save" id="btn-branch-save" disabled>Continue</button>
       </div>
     </div>
   </div>
 
-  <!-- Audio Engine & Preloader Engine -->
+<!-- Audio Engine & Preloader Engine -->
   <audio id="audio-engine" preload="auto"></audio>
   <audio id="audio-preloader" preload="auto"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Yahan branch.js ko link kiya hai -->
+  <script type="module" src="js/branch.js"></script>
+  
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

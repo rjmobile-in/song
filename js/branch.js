@@ -10,11 +10,12 @@ const BRANCHES = [
 ];
 
 let overlay = null;
-let select = null;
+let branchListEl = null;
 let saveBtn = null;
 let errorEl = null;
 let branchLabel = null;
 let resolveReady = null;
+let currentSelection = '';
 
 export function getBranchName() {
   return localStorage.getItem(STORAGE_KEY) || '';
@@ -30,28 +31,33 @@ export function setBranchName(name) {
 function updateBranchLabel() {
   if (!branchLabel) return;
   const name = getBranchName();
-  branchLabel.textContent = name || 'Set Branch';
+  branchLabel.textContent = name || 'Branch';
 }
 
-function populateSelect() {
-  if (!select) return;
-
-  select.innerHTML =
-    '<option value="" disabled selected>Select your branch...</option>' +
-    BRANCHES.map(
-      (branch) => `<option value="${escapeAttr(branch)}">${escapeHtml(branch)}</option>`
-    ).join('');
-}
-
-function escapeAttr(str) {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+function renderBranches() {
+  if (!branchListEl) return;
+  branchListEl.innerHTML = '';
+  
+  BRANCHES.forEach((branch) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'branch-btn';
+    
+    if (branch === currentSelection) {
+      btn.classList.add('selected');
+    }
+    
+    btn.textContent = branch;
+    
+    btn.addEventListener('click', () => {
+      currentSelection = branch;
+      hideError();
+      if (saveBtn) saveBtn.disabled = false;
+      renderBranches();
+    });
+    
+    branchListEl.appendChild(btn);
+  });
 }
 
 function showError(message) {
@@ -67,21 +73,19 @@ function hideError() {
 
 function openModal(force = false) {
   if (!overlay) return;
-
   hideError();
-  populateSelect();
-
+  
   const saved = getBranchName();
-  if (select) {
-    if (force && saved && BRANCHES.includes(saved)) {
-      select.value = saved;
-    } else {
-      select.selectedIndex = 0;
-    }
+  if (force && saved && BRANCHES.includes(saved)) {
+    currentSelection = saved;
+    if (saveBtn) saveBtn.disabled = false;
+  } else {
+    currentSelection = '';
+    if (saveBtn) saveBtn.disabled = true;
   }
-
+  
+  renderBranches();
   overlay.classList.add('visible');
-  requestAnimationFrame(() => select?.focus());
 }
 
 function closeModal() {
@@ -90,38 +94,37 @@ function closeModal() {
 }
 
 function handleSave() {
-  const name = select?.value || '';
-
-  if (!name || !BRANCHES.includes(name)) {
+  if (!currentSelection || !BRANCHES.includes(currentSelection)) {
     showError('Please select a store branch from the list.');
     return;
   }
 
   hideError();
-  setBranchName(name);
+  setBranchName(currentSelection);
   closeModal();
 
   if (resolveReady) {
-    resolveReady(name);
+    resolveReady(currentSelection);
     resolveReady = null;
   }
 }
 
 export function initBranch() {
   overlay = document.getElementById('branch-overlay');
-  select = document.getElementById('branch-select');
+  branchListEl = document.getElementById('branch-list');
   saveBtn = document.getElementById('btn-branch-save');
   errorEl = document.getElementById('branch-error');
   branchLabel = document.getElementById('branch-label');
 
   const changeBtn = document.getElementById('btn-change-branch');
-  changeBtn?.addEventListener('click', () => openModal(true));
+  if (changeBtn) {
+    changeBtn.addEventListener('click', () => openModal(true));
+  }
 
-  saveBtn?.addEventListener('click', handleSave);
+  if (saveBtn) {
+    saveBtn.addEventListener('click', handleSave);
+  }
 
-  select?.addEventListener('change', hideError);
-
-  populateSelect();
   updateBranchLabel();
 
   const existing = getBranchName();
