@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>RJ Mobile | Audio Broadcaster</title>
   <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="manifest" href="manifest.json" />
 
   <meta name="theme-color" content="#0a1023" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -14,276 +15,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
-  <style>
-    *, *::before, *::after { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      -webkit-tap-highlight-color: transparent; 
-    }
-
-    html, body {
-      overscroll-behavior-y: none;
-    }
-
-    :root {
-      --bg-base: #0a1023;
-      --bg-surface: #121b33;
-      --card-bg: #121b33;
-      --card-bg-alpha: rgba(18, 27, 51, 0.85);
-      --card-border: #1e2d4a;
-
-      --primary: #f37021;
-      --primary-hover: #d9621a;
-      --primary-alpha: rgba(243, 112, 33, 0.15);
-      --primary-glow: rgba(243, 112, 33, 0.35);
-
-      --text-main: #f8fafc;
-      --text-soft: #94a3b8;
-
-      --input-bg: #070c1b;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 22px;
-      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-base);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px 48px;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    h1, h2, h3, .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-    .container {
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .brand-group { display: flex; align-items: center; gap: 12px; }
-    
-    .brand-title { font-size: 18px; font-weight: 800; color: var(--text-main); }
-    
-    .loop-badge {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--primary);
-      background: var(--primary-alpha);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--primary);
-      text-transform: uppercase;
-    }
-
-    .player-card {
-      background: var(--card-bg-alpha);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      padding: 28px 24px;
-      backdrop-filter: blur(16px);
-      box-shadow: var(--shadow-md);
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
-
-    .now-playing-banner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    
-    .track-badge {
-      background: var(--input-bg);
-      color: var(--text-soft);
-      border: 1px solid var(--card-border);
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .visualizer {
-      display: flex;
-      align-items: flex-end;
-      gap: 4px;
-      height: 22px;
-    }
-    .bar {
-      width: 4px;
-      height: 4px;
-      background: var(--primary);
-      border-radius: 4px;
-      transition: height 0.15s ease;
-    }
-    .playing .bar { animation: bounce 0.6s infinite ease-in-out alternate; }
-    .playing .bar:nth-child(2) { animation-delay: 0.15s; }
-    .playing .bar:nth-child(3) { animation-delay: 0.3s; }
-    .playing .bar:nth-child(4) { animation-delay: 0.45s; }
-    @keyframes bounce { 0% { height: 4px; } 100% { height: 20px; } }
-
-    .track-meta { text-align: center; margin: 4px 0; }
-    .track-title { font-size: 20px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
-
-    .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      cursor: pointer;
-      position: relative;
-    }
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--primary) 0%, #ff8a3d 100%);
-      border-radius: 10px;
-      position: relative;
-    }
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      right: -8px;
-      top: 50%;
-      transform: translateY(-50%) scale(0);
-      width: 16px;
-      height: 16px;
-      background: #fff;
-      border: 3px solid var(--primary);
-      border-radius: 50%;
-      box-shadow: 0 0 5px rgba(0,0,0,0.5);
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 10;
-    }
-    .progress-bar:hover .progress-fill::after,
-    .progress-bar.dragging .progress-fill::after {
-      transform: translateY(-50%) scale(1);
-    }
-    
-    .time-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-soft);
-      font-family: monospace;
-    }
-
-    .controls-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-    }
-    .btn-ctrl {
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      width: 50px; height: 50px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      transition: all 0.2s;
-    }
-    .btn-ctrl:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
-    .btn-play-main {
-      width: 68px; height: 68px;
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      font-size: 26px;
-      box-shadow: 0 4px 20px var(--primary-glow);
-    }
-    .btn-play-main:hover { background: var(--primary-hover); transform: scale(1.08); }
-
-    .playlist-section {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow-md);
-    }
-    .playlist-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .playlist-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
-    .track-count-badge { font-size: 12px; color: var(--primary); font-weight: 700; }
-
-    .track-list { display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; }
-    .track-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .track-item:hover { border-color: var(--primary); transform: translateX(3px); }
-    .track-item.active { background: var(--primary-alpha); border-color: var(--primary); }
-    .track-item.active .t-name { color: var(--primary); font-weight: 700; }
-    
-    .t-left { display: flex; align-items: center; gap: 12px; }
-    .t-num { font-size: 13px; font-weight: 800; color: var(--text-soft); width: 22px; }
-    .t-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
-    .t-status { font-size: 13px; font-weight: 700; color: var(--text-soft); }
-  </style>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
   <div class="container">
-    
+
     <header class="header">
       <div class="brand-group">
-        <img src="logo.png" alt="RJ Mobile Logo" style="width: 44px; height: 44px; object-fit: contain; border-radius: 8px;">
+        <img src="logo.png" alt="RJ Mobile Logo" class="brand-logo" />
         <div>
           <div class="brand-title">RJ Mobile</div>
-          <div style="font-size: 11px; color: var(--text-soft); font-weight: 600;">Store Audio Broadcaster</div>
+          <div class="brand-subtitle">Store Audio Broadcaster</div>
         </div>
       </div>
-      <div class="loop-badge">🔁 Auto-Loop</div>
+      <div class="header-actions">
+        <button class="btn-branch" id="btn-change-branch" title="Change Branch">
+          <span class="branch-icon">🏪</span>
+          <span class="branch-name" id="branch-label">Branch</span>
+        </button>
+        <div class="loop-badge">🔁 Auto-Loop</div>
+      </div>
     </header>
 
     <div class="player-card">
       <div class="now-playing-banner">
         <span class="track-badge" id="current-badge">Loading...</span>
         <div class="visualizer" id="visualizer">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
         </div>
       </div>
 
       <div class="track-meta">
-        <div class="track-title" id="player-title">Scanning audio tracks...</div>
+        <div class="track-title" id="player-title">Loading playlist...</div>
       </div>
+
+      <p class="autoplay-hint hidden" id="autoplay-hint">
+        Tap the play button to start audio (browser autoplay policy)
+      </p>
 
       <div class="progress-wrap">
         <div class="progress-bar" id="progress-bar">
@@ -296,9 +68,9 @@
       </div>
 
       <div class="controls-row">
-        <button class="btn-ctrl" id="btn-prev" title="Previous Track">⏮</button>
-        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause">▶</button>
-        <button class="btn-ctrl" id="btn-next" title="Next Track">⏭</button>
+        <button class="btn-ctrl" id="btn-prev" title="Previous Track" aria-label="Previous Track">⏮</button>
+        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause" aria-label="Play or Pause">▶</button>
+        <button class="btn-ctrl" id="btn-next" title="Next Track" aria-label="Next Track">⏭</button>
       </div>
     </div>
 
@@ -309,296 +81,49 @@
       </div>
 
       <div class="track-list" id="track-list-container">
-        <div style="text-align: center; color: var(--text-soft); padding: 20px;">Fetching songs from GitHub...</div>
+        <div class="empty-state">Loading playlist...</div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Branch selection modal -->
+  <div class="branch-overlay" id="branch-overlay">
+    <div class="branch-modal" role="dialog" aria-labelledby="branch-modal-title" aria-modal="true">
+      <div class="branch-modal-icon">🏪</div>
+      <h2 id="branch-modal-title">Select Your Store Branch</h2>
+      <p>Choose or enter your branch name so playback analytics are tracked correctly.</p>
+
+      <div class="branch-form">
+        <input
+          type="text"
+          class="branch-input"
+          id="branch-input"
+          placeholder="e.g. Downtown, Mall Outlet..."
+          autocomplete="organization"
+          maxlength="100"
+        />
+
+        <div class="branch-suggestions">
+          <button type="button" class="branch-chip">Main Street</button>
+          <button type="button" class="branch-chip">Downtown</button>
+          <button type="button" class="branch-chip">Mall Outlet</button>
+          <button type="button" class="branch-chip">Airport</button>
+          <button type="button" class="branch-chip">Warehouse</button>
+        </div>
+
+        <p class="branch-error" id="branch-error"></p>
+
+        <button type="button" class="btn-branch-save" id="btn-branch-save">Continue</button>
+      </div>
+    </div>
   </div>
 
   <!-- Audio Engine & Preloader Engine -->
   <audio id="audio-engine" preload="auto"></audio>
   <audio id="audio-preloader" preload="auto"></audio>
 
-  <script>
-    const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    const repoOwner = window.location.hostname.split('.')[0] || "YOUR_GITHUB_USERNAME";
-    const repoName = pathSegments[0] || "YOUR_REPO_NAME";
-
-    let playlist = [];
-    let currentTrackIndex = 0;
-    let isPlaying = false;
-
-    const audio = document.getElementById('audio-engine');
-    const preloader = document.getElementById('audio-preloader');
-    
-    const btnPlay = document.getElementById('btn-play');
-    const btnNext = document.getElementById('btn-next');
-    const btnPrev = document.getElementById('btn-prev');
-    const playerTitle = document.getElementById('player-title');
-    const currentBadge = document.getElementById('current-badge');
-    const progressFill = document.getElementById('progress-fill');
-    const progressBar = document.getElementById('progress-bar');
-    const timeCurrent = document.getElementById('time-current');
-    const timeTotal = document.getElementById('time-total');
-    const visualizer = document.getElementById('visualizer');
-    const trackListContainer = document.getElementById('track-list-container');
-    const trackCountText = document.getElementById('track-count-text');
-
-    function formatTime(seconds) {
-      if (isNaN(seconds) || seconds === 0) return "0:00";
-      const h = Math.floor(seconds / 3600);
-      const m = Math.floor((seconds % 3600) / 60);
-      const s = Math.floor(seconds % 60);
-      if (h > 0) return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-
-    async function loadSongsFromGitHub() {
-      try {
-        const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/songs`;
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("Could not fetch repo contents");
-        const data = await res.json();
-
-        playlist = data
-          .filter(item => item.type === "file" && /\.(mp3|wav|m4a|ogg)$/i.test(item.name))
-          .map((item, index) => {
-            const cleanTitle = item.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-            return {
-              id: index + 1,
-              title: cleanTitle,
-              src: item.download_url || `songs/${item.name}`
-            };
-          });
-
-        if (playlist.length === 0) throw new Error("No audio files found");
-
-        trackCountText.innerText = `${playlist.length} Tracks • Calculating...`;
-        renderPlaylist();
-        loadTrack(0);
-
-        // Background engine to fetch all durations parallelly
-        Promise.all(playlist.map(track => {
-          return new Promise(resolve => {
-            const tempAudio = new Audio();
-            tempAudio.preload = "metadata"; // Sirf metadata layega, full file nahi
-            tempAudio.src = track.src;
-            tempAudio.onloadedmetadata = () => resolve(tempAudio.duration);
-            tempAudio.onerror = () => resolve(0); // Error aaye toh skip
-          });
-        })).then(durations => {
-          const totalSeconds = durations.reduce((acc, curr) => acc + curr, 0);
-          trackCountText.innerText = `${playlist.length} Tracks • ${formatTime(totalSeconds)}`;
-        });
-
-      } catch (err) {
-        console.error("API scan failed:", err);
-        playlist = [];
-        playerTitle.innerText = "Error scanning folder";
-        trackCountText.innerText = `0 Tracks`;
-        trackListContainer.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 20px;">Could not load songs. Please run on GitHub Pages.</div>';
-      }
-    }
-
-    function renderPlaylist() {
-      trackListContainer.innerHTML = playlist.map((t, idx) => `
-        <div class="track-item ${idx === currentTrackIndex ? 'active' : ''}" onclick="selectTrack(${idx})">
-          <div class="t-left">
-            <span class="t-num">${t.id}</span>
-            <div class="t-name">${t.title}</div>
-          </div>
-          <div class="t-status">${idx === currentTrackIndex && isPlaying ? '🔊' : '▶'}</div>
-        </div>
-      `).join('');
-    }
-
-    function loadTrack(index) {
-      if (!playlist.length) return;
-      currentTrackIndex = index;
-      const track = playlist[currentTrackIndex];
-      playerTitle.innerText = track.title;
-      currentBadge.innerText = `Track ${track.id} of ${playlist.length}`;
-      audio.src = track.src;
-      renderPlaylist();
-
-      // Background Metadata
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: track.title,
-          artist: 'RJ Mobile Offers',
-          album: 'Store Audio Broadcaster',
-          artwork: [{ src: 'logo.png', sizes: '512x512', type: 'image/png' }]
-        });
-      }
-
-      // =====================================
-      // 🚀 BACKGROUND PRELOADER ENGINE
-      // =====================================
-      // Load agla gaana chupchaap taaki next hone par delay na aaye
-      const nextIndex = (currentTrackIndex + 1) % playlist.length;
-      preloader.src = playlist[nextIndex].src;
-    }
-
-    function togglePlay() {
-      if (!audio.src && playlist.length) loadTrack(currentTrackIndex);
-      if (audio.paused) {
-        audio.play().then(() => {
-          isPlaying = true;
-          btnPlay.innerText = '⏸';
-          visualizer.classList.add('playing');
-          renderPlaylist();
-        }).catch(() => {});
-      } else {
-        audio.pause();
-        isPlaying = false;
-        btnPlay.innerText = '▶';
-        visualizer.classList.remove('playing');
-        renderPlaylist();
-      }
-    }
-
-    function selectTrack(index) {
-      loadTrack(index);
-      audio.play().then(() => {
-        isPlaying = true;
-        btnPlay.innerText = '⏸';
-        visualizer.classList.add('playing');
-        renderPlaylist();
-      });
-    }
-
-    function playNext() {
-      if (!playlist.length) return;
-      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-      loadTrack(currentTrackIndex);
-      audio.play();
-      btnPlay.innerText = '⏸';
-      visualizer.classList.add('playing');
-      renderPlaylist();
-    }
-
-    function playPrev() {
-      if (!playlist.length) return;
-      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-      loadTrack(currentTrackIndex);
-      audio.play();
-      visualizer.classList.add('playing');
-      renderPlaylist();
-    }
-
-    btnPlay.addEventListener('click', togglePlay);
-    btnNext.addEventListener('click', playNext);
-    btnPrev.addEventListener('click', playPrev);
-
-    let isDragging = false;
-
-    function updateProgressUI(clientX) {
-      const rect = progressBar.getBoundingClientRect();
-      let clickX = clientX - rect.left;
-      clickX = Math.max(0, Math.min(clickX, rect.width));
-      const percent = (clickX / rect.width) * 100;
-      progressFill.style.width = `${percent}%`;
-      
-      if (audio.duration) {
-        timeCurrent.innerText = formatTime((clickX / rect.width) * audio.duration);
-      }
-      return clickX / rect.width;
-    }
-
-    progressBar.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      progressBar.classList.add('dragging');
-      updateProgressUI(e.clientX);
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (isDragging) updateProgressUI(e.clientX);
-    });
-    window.addEventListener('mouseup', (e) => {
-      if (isDragging) {
-        isDragging = false;
-        progressBar.classList.remove('dragging');
-        if (audio.duration) audio.currentTime = updateProgressUI(e.clientX) * audio.duration;
-      }
-    });
-
-    progressBar.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      progressBar.classList.add('dragging');
-      updateProgressUI(e.touches[0].clientX);
-    });
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging) updateProgressUI(e.touches[0].clientX);
-    });
-    window.addEventListener('touchend', () => {
-      if (isDragging) {
-        isDragging = false;
-        progressBar.classList.remove('dragging');
-        if (audio.duration) {
-          audio.currentTime = (parseFloat(progressFill.style.width) / 100) * audio.duration;
-        }
-      }
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      if (audio.duration && !isDragging) {
-        progressFill.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-        timeCurrent.innerText = formatTime(audio.currentTime);
-        timeTotal.innerText = formatTime(audio.duration);
-      }
-    });
-
-    // Auto Play Next instantly
-    audio.addEventListener('ended', playNext);
-
-    let wakeLock = null;
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (err) {}
-    }
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') requestWakeLock();
-    });
-
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.setActionHandler('play', togglePlay);
-      navigator.mediaSession.setActionHandler('pause', togglePlay);
-      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
-      navigator.mediaSession.setActionHandler('nexttrack', playNext);
-    }
-
-    requestWakeLock();
-    loadSongsFromGitHub();
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault(); 
-        togglePlay();
-      }
-    });
-
-    let touchStartY = 0;
-    document.addEventListener('touchstart', (e) => {
-      touchStartY = e.touches[0].clientY;
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-      const touchY = e.touches[0].clientY;
-      const touchDiff = touchY - touchStartY;
-      
-      if (touchDiff > 0 && window.scrollY <= 0) {
-        if (!e.target.closest('.track-list')) {
-          e.preventDefault();
-        } else {
-          if (trackListContainer.scrollTop <= 0) {
-            e.preventDefault();
-          }
-        }
-      }
-    }, { passive: false });
-
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

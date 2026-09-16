@@ -1,0 +1,12 @@
+{
+  "name": "rj-mobile-audio-broadcaster",
+  "version": "2.0.0",
+  "private": true,
+  "description": "In-store audio broadcaster with analytics and offline support",
+  "scripts": {
+    "generate-playlist": "node scripts/generate_playlist.js"
+  },
+  "dependencies": {
+    "music-metadata": "^10.9.0"
+  }
+}

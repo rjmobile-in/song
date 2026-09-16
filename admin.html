@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJ Mobile | Admin Dashboard</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <meta name="theme-color" content="#0a1023" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <!-- Login (shown by default) -->
+  <div id="login-view" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-icon">🔐</div>
+      <h1>Admin Login</h1>
+      <p>Sign in to monitor live store playback and activity logs.</p>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn-primary" id="btn-login">Login</button>
+        <p class="login-error" id="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard (hidden until authenticated) -->
+  <div id="dashboard-view" class="dashboard hidden">
+
+    <header class="dashboard-header">
+      <div>
+        <h1>RJ Mobile - Admin Dashboard</h1>
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          Live updates enabled
+        </div>
+      </div>
+      <button type="button" class="btn-logout" id="btn-logout">Logout</button>
+    </header>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Live Store Status</div>
+          <div class="section-subtitle">Current state per branch (based on latest event)</div>
+        </div>
+      </div>
+      <div class="store-grid" id="store-grid">
+        <div class="loading-text">Loading store status...</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Recent Activity</div>
+          <div class="section-subtitle">Last 50 playback events</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>Branch</th>
+              <th>Song</th>
+              <th>Event</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="activity-body">
+            <tr>
+              <td colspan="4" class="loading-text">Loading activity...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
