@@ -1,0 +1,32 @@
+name: Generate Playlist
+
+on:
+  push:
+    paths:
+      - 'songs/**'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+
+      - run: npm run generate-playlist
+
+      - name: Commit updated songs.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add songs.json
+          git diff --staged --quiet || git commit -m "chore: regenerate songs.json"
+          git push
