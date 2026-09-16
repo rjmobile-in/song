@@ -489,7 +489,7 @@ h1, h2, h3, .brand-title {
   gap: 12px;
 }
 
-.branch-input {
+.branch-select {
   width: 100%;
   padding: 14px 16px;
   background: var(--input-bg);
@@ -500,37 +500,21 @@ h1, h2, h3, .brand-title {
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
-}
-
-.branch-input:focus {
-  border-color: var(--primary);
-}
-
-.branch-input::placeholder {
-  color: var(--text-soft);
-}
-
-.branch-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.branch-chip {
-  padding: 6px 12px;
-  background: var(--input-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-soft);
   cursor: pointer;
-  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
 }
 
-.branch-chip:hover {
+.branch-select:focus {
   border-color: var(--primary);
-  color: var(--primary);
+}
+
+.branch-select option {
+  background: var(--input-bg);
+  color: var(--text-main);
 }
 
 .btn-branch-save {

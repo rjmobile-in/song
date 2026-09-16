@@ -92,25 +92,12 @@
     <div class="branch-modal" role="dialog" aria-labelledby="branch-modal-title" aria-modal="true">
       <div class="branch-modal-icon">🏪</div>
       <h2 id="branch-modal-title">Select Your Store Branch</h2>
-      <p>Choose or enter your branch name so playback analytics are tracked correctly.</p>
+      <p>Select your store branch so playback analytics are tracked correctly.</p>
 
       <div class="branch-form">
-        <input
-          type="text"
-          class="branch-input"
-          id="branch-input"
-          placeholder="e.g. Downtown, Mall Outlet..."
-          autocomplete="organization"
-          maxlength="100"
-        />
-
-        <div class="branch-suggestions">
-          <button type="button" class="branch-chip">Main Street</button>
-          <button type="button" class="branch-chip">Downtown</button>
-          <button type="button" class="branch-chip">Mall Outlet</button>
-          <button type="button" class="branch-chip">Airport</button>
-          <button type="button" class="branch-chip">Warehouse</button>
-        </div>
+        <select class="branch-select" id="branch-select" aria-label="Store branch">
+          <option value="" disabled selected>Select your branch...</option>
+        </select>
 
         <p class="branch-error" id="branch-error"></p>
 

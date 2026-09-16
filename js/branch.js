@@ -1,15 +1,16 @@
 const STORAGE_KEY = 'store_branch_name';
 
-const SUGGESTED_BRANCHES = [
-  'Main Street',
-  'Downtown',
-  'Mall Outlet',
-  'Airport',
-  'Warehouse'
+const BRANCHES = [
+  'Jhotwara',
+  'Lohamandi',
+  'Murlipura, 1 Number',
+  'Murlipura, 6 Number',
+  'Shastri Nagar',
+  'VKI, 17 Number'
 ];
 
 let overlay = null;
-let input = null;
+let select = null;
 let saveBtn = null;
 let errorEl = null;
 let branchLabel = null;
@@ -20,9 +21,8 @@ export function getBranchName() {
 }
 
 export function setBranchName(name) {
-  const trimmed = name.trim();
-  if (trimmed) {
-    localStorage.setItem(STORAGE_KEY, trimmed);
+  if (BRANCHES.includes(name)) {
+    localStorage.setItem(STORAGE_KEY, name);
   }
   updateBranchLabel();
 }
@@ -31,6 +31,27 @@ function updateBranchLabel() {
   if (!branchLabel) return;
   const name = getBranchName();
   branchLabel.textContent = name || 'Set Branch';
+}
+
+function populateSelect() {
+  if (!select) return;
+
+  select.innerHTML =
+    '<option value="" disabled selected>Select your branch...</option>' +
+    BRANCHES.map(
+      (branch) => `<option value="${escapeAttr(branch)}">${escapeHtml(branch)}</option>`
+    ).join('');
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function showError(message) {
@@ -48,12 +69,19 @@ function openModal(force = false) {
   if (!overlay) return;
 
   hideError();
-  if (input) {
-    input.value = force ? getBranchName() : (getBranchName() || '');
+  populateSelect();
+
+  const saved = getBranchName();
+  if (select) {
+    if (force && saved && BRANCHES.includes(saved)) {
+      select.value = saved;
+    } else {
+      select.selectedIndex = 0;
+    }
   }
 
   overlay.classList.add('visible');
-  requestAnimationFrame(() => input?.focus());
+  requestAnimationFrame(() => select?.focus());
 }
 
 function closeModal() {
@@ -62,9 +90,10 @@ function closeModal() {
 }
 
 function handleSave() {
-  const name = input?.value.trim() || '';
-  if (!name) {
-    showError('Please enter a store branch name.');
+  const name = select?.value || '';
+
+  if (!name || !BRANCHES.includes(name)) {
+    showError('Please select a store branch from the list.');
     return;
   }
 
@@ -78,19 +107,9 @@ function handleSave() {
   }
 }
 
-function bindSuggestions() {
-  const chips = document.querySelectorAll('.branch-chip');
-  chips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      if (input) input.value = chip.textContent.trim();
-      hideError();
-    });
-  });
-}
-
 export function initBranch() {
   overlay = document.getElementById('branch-overlay');
-  input = document.getElementById('branch-input');
+  select = document.getElementById('branch-select');
   saveBtn = document.getElementById('btn-branch-save');
   errorEl = document.getElementById('branch-error');
   branchLabel = document.getElementById('branch-label');
@@ -100,18 +119,18 @@ export function initBranch() {
 
   saveBtn?.addEventListener('click', handleSave);
 
-  input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSave();
-  });
+  select?.addEventListener('change', hideError);
 
-  input?.addEventListener('input', hideError);
-
-  bindSuggestions();
+  populateSelect();
   updateBranchLabel();
 
   const existing = getBranchName();
-  if (existing) {
+  if (existing && BRANCHES.includes(existing)) {
     return Promise.resolve(existing);
+  }
+
+  if (existing && !BRANCHES.includes(existing)) {
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   openModal(false);
@@ -121,4 +140,4 @@ export function initBranch() {
   });
 }
 
-export { SUGGESTED_BRANCHES };
+export { BRANCHES };
