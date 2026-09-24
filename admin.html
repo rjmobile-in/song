@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RJ Mobile | Admin Dashboard</title>
+  <title>RJ Mobile | Admin Analytics & Logs</title>
   <link rel="icon" type="image/png" href="logo.png" />
   <meta name="theme-color" content="#0a1023" />
 
@@ -12,20 +12,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/admin.css" />
+  <!-- Optional: Add Chart.js if you want to render graphs in the future -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
 </head>
 <body>
 
-  <!-- Login (shown by default) -->
+  <!-- ======================= -->
+  <!-- LOGIN VIEW -->
+  <!-- ======================= -->
   <div id="login-view" class="login-wrapper">
     <div class="login-card">
       <div class="login-icon">🔐</div>
-      <h1>Admin Login</h1>
-      <p>Sign in to monitor live store playback and activity logs.</p>
+      <h1>Admin Command Center</h1>
+      <p>Sign in to monitor live store playback, analytics, and activity logs.</p>
 
       <form id="login-form">
         <div class="form-group">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" autocomplete="email" required />
+          <input type="email" id="login-email" class="form-input" placeholder="admin@rjmobile.com" autocomplete="email" required />
         </div>
 
         <div class="form-group">
@@ -33,64 +37,172 @@
           <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password" required />
         </div>
 
-        <button type="submit" class="btn-primary" id="btn-login">Login</button>
+        <button type="submit" class="btn-primary" id="btn-login">Login to Dashboard</button>
         <p class="login-error" id="login-error"></p>
       </form>
     </div>
   </div>
 
-  <!-- Dashboard (hidden until authenticated) -->
+  <!-- ======================= -->
+  <!-- DASHBOARD VIEW -->
+  <!-- ======================= -->
   <div id="dashboard-view" class="dashboard hidden">
 
+    <!-- Top Navigation / Header -->
     <header class="dashboard-header">
-      <div>
-        <h1>RJ Mobile - Admin Dashboard</h1>
-        <div class="live-indicator">
-          <span class="live-dot"></span>
-          Live updates enabled
+      <div class="header-left">
+        <img src="logo.png" alt="Logo" class="dashboard-logo" width="40" height="40" style="display: none;" />
+        <div>
+          <h1>RJ Mobile Analytics</h1>
+          <div class="live-indicator" style="margin-top: 6px;">
+            <button class="btn-secondary" id="btn-refresh-dashboard" style="padding: 6px 12px; font-size: 12px;">Refresh Dashboard 🔄</button>
+          </div>
         </div>
       </div>
-      <button type="button" class="btn-logout" id="btn-logout">Logout</button>
+      <div class="header-actions">
+        <span class="admin-badge">Admin</span>
+        <button type="button" class="btn-logout" id="btn-logout">Logout</button>
+      </div>
     </header>
 
-    <section class="section">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Live Store Status</div>
-          <div class="section-subtitle">Current state per branch (based on latest event)</div>
-        </div>
-      </div>
-      <div class="store-grid" id="store-grid">
-        <div class="loading-text">Loading store status...</div>
-      </div>
-    </section>
+    <!-- Main Content Container -->
+    <main class="dashboard-content">
 
-    <section class="section">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Recent Activity</div>
-          <div class="section-subtitle">Last 50 playback events</div>
+      <!-- 1. KEY METRICS OVERVIEW (New Analytics Section) -->
+      <section class="section analytics-overview">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-title">Online Branches</div>
+            <div class="stat-value" id="stat-online-branches">0</div>
+            <div class="stat-trend text-green">Live Right Now</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Total Plays (Today)</div>
+            <div class="stat-value" id="stat-total-plays">0</div>
+            <div class="stat-trend">Tracks played</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Most Active Branch</div>
+            <div class="stat-value text-sm" id="stat-active-branch">Loading...</div>
+            <div class="stat-trend">Based on daily logs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">System Status</div>
+            <div class="stat-value text-green">Healthy</div>
+            <div class="stat-trend" id="stat-last-sync">Last sync: Just now</div>
+          </div>
         </div>
-      </div>
-      <div class="table-wrap">
-        <table class="activity-table">
-          <thead>
-            <tr>
-              <th>Branch</th>
-              <th>Song</th>
-              <th>Event</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody id="activity-body">
-            <tr>
-              <td colspan="4" class="loading-text">Loading activity...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+      </section>
 
+      <!-- 2. LIVE STORE STATUS -->
+      <section class="section store-status-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Store Playback Radar</h2>
+            <p class="section-subtitle">Current playback state across all branches</p>
+          </div>
+        </div>
+        
+        <div class="store-grid" id="store-grid">
+          <div class="loading-state">
+            <span class="spinner"></span> Gathering store data...
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. ADVANCED ACTIVITY LOGS (Filtered & Paginated) -->
+      <section class="section logs-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Playback History & Logs</h2>
+            <p class="section-subtitle">Detailed human-readable audit trail of all store activities</p>
+          </div>
+          <button class="btn-secondary" id="btn-export-csv">Export CSV 📥</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label for="filter-branch">Branch</label>
+            <select id="filter-branch" class="form-select">
+              <option value="all">All Branches</option>
+              <!-- JS will populate this -->
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="filter-event">Event Type</label>
+            <select id="filter-event" class="form-select">
+              <option value="all">All Events</option>
+              <option value="started">▶ Play</option>
+              <option value="paused">⏸ Pause</option>
+              <option value="ended">⏹ Stop</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-date-start">From Date</label>
+            <input type="date" id="filter-date-start" class="form-input" />
+          </div>
+
+          <div class="filter-group">
+            <label for="filter-date-end">To Date</label>
+            <input type="date" id="filter-date-end" class="form-input" />
+          </div>
+
+          <div class="filter-group search-group">
+            <label for="filter-search">Search Song</label>
+            <input type="text" id="filter-search" class="form-input" placeholder="Search track name..." />
+          </div>
+          
+          <div class="filter-actions">
+            <button class="btn-primary" id="btn-apply-filters">Apply</button>
+            <button class="btn-text" id="btn-clear-filters">Clear</button>
+          </div>
+        </div>
+
+        <!-- Activity Table -->
+        <div class="table-wrap">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Branch</th>
+                <th>Track Information</th>
+                <th>Time (Local)</th>
+                <th>Relative Time</th>
+              </tr>
+            </thead>
+            <tbody id="activity-body">
+              <tr>
+                <td colspan="5" class="loading-state">Loading activity logs...</td>
+              </tr>
+              <!-- Example of a human-readable row to generate in JS:
+              <tr>
+                <td><span class="badge badge-play">Playing</span></td>
+                <td class="fw-bold">DCM</td>
+                <td><div class="track-name">Diwali Promo Audio</div></td>
+                <td>24 Sep 2026, 01:15 PM</td>
+                <td class="text-muted">2 mins ago</td>
+              </tr> 
+              -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-footer">
+          <div class="pagination-info" id="pagination-info">Showing 1-50 of 1,204 logs</div>
+          <div class="pagination-controls">
+            <button class="btn-page" id="btn-page-prev" disabled>Previous</button>
+            <span class="page-current" id="page-current">Page 1</span>
+            <button class="btn-page" id="btn-page-next">Next</button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
