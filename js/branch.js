@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'store_branch_name';
 
 const BRANCHES = [
+  'DCM',
   'Jhotwara',
   'Lohamandi',
   'Murlipura, 1 Number',
