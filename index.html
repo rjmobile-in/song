@@ -2,121 +2,372 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>RJ Mobile | Audio Broadcaster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJ Mobile | Store Audio Broadcaster</title>
+  <meta name="description" content="Continuous in-store audio playback for RJ Mobile branches." />
+  <meta name="theme-color" content="#070707" />
   <link rel="icon" type="image/png" href="logo.png" />
-  <link rel="manifest" href="manifest.json" />
-
-  <meta name="theme-color" content="#0a1023" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
+  <link rel="apple-touch-icon" href="logo.png" />
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('rj_theme'); } catch (e) {}
+      if (t === 'light') document.documentElement.classList.add('light-theme');
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      color-scheme: dark;
+      --bg: #070707; --surface: #121212; --line: #262626; --chip: #1a1a1a; --hover: #181612;
+      --text: #ffffff; --soft: #a1a1aa;
+      --gold: #d4af37; --gold-text: #e6c35a; --on-gold: #151100; --gold-soft: rgba(212, 175, 55, 0.12);
+      --bad: #f87171;
+    }
+    html.light-theme {
+      color-scheme: light;
+      --bg: #faf8f3; --surface: #ffffff; --line: #e8e3d5; --chip: #f3efe3; --hover: #fffaf0;
+      --text: #16130a; --soft: #686353;
+      --gold: #d4af37; --gold-text: #8a6a00; --on-gold: #151100; --gold-soft: rgba(212, 175, 55, 0.16);
+      --bad: #b91c1c;
+    }
+    html { -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Manrope', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px 16px 48px; line-height: 1.45; transition: background-color .3s, color .3s; }
+    .wrap { max-width: 560px; margin: 0 auto; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+    ::selection { background: var(--gold); color: var(--on-gold); }
 
-  <link rel="stylesheet" href="css/styles.css" />
+    /* Header */
+    .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 19px; }
+    .brand small { display: block; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600; color: var(--soft); }
+    .logo { width: 46px; height: 46px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); overflow: hidden; display: grid; place-items: center; flex-shrink: 0; }
+    .logo img { width: 100%; height: 100%; object-fit: contain; }
+    .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--soft); display: grid; place-items: center; transition: color .2s, border-color .2s, transform .3s cubic-bezier(.34, 1.56, .64, 1); }
+    .icon-btn:hover { color: var(--gold-text); border-color: var(--gold); transform: rotate(20deg); }
+    .icon-btn:active { transform: scale(.9); }
+    .icon-btn .sun { display: none; } html.light-theme .icon-btn .sun { display: block; } html.light-theme .icon-btn .moon { display: none; }
+
+    /* Player */
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 24px 22px; display: flex; flex-direction: column; gap: 18px; }
+    .np-row { display: flex; align-items: center; justify-content: space-between; }
+    .badge { font-size: 12px; font-weight: 800; color: var(--gold-text); background: var(--gold-soft); border-radius: 999px; padding: 5px 12px; }
+    .viz { display: flex; align-items: flex-end; gap: 4px; height: 22px; }
+    .viz i { width: 4px; height: 4px; background: var(--gold); border-radius: 4px; }
+    .playing .viz i { animation: bounce .6s infinite ease-in-out alternate; }
+    .playing .viz i:nth-child(2) { animation-delay: .15s; } .playing .viz i:nth-child(3) { animation-delay: .3s; } .playing .viz i:nth-child(4) { animation-delay: .45s; }
+    @keyframes bounce { from { height: 4px; } to { height: 20px; } }
+    .now { text-align: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(22px, 6vw, 28px); line-height: 1.2; letter-spacing: -.01em; min-height: 34px; }
+    .hint { display: none; text-align: center; font-size: 13px; color: var(--soft); background: var(--chip); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; }
+    .hint.show { display: block; }
+
+    .seek { height: 6px; background: var(--line); border-radius: 6px; cursor: pointer; position: relative; touch-action: none; }
+    .seek::before { content: ''; position: absolute; inset: -12px 0; }
+    .fill { height: 100%; width: 0; background: var(--gold); border-radius: 6px; position: relative; }
+    .fill::after { content: ''; position: absolute; right: -8px; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--gold); transform: translateY(-50%) scale(0); transition: transform .2s; }
+    .seek:hover .fill::after, .seek.drag .fill::after { transform: translateY(-50%) scale(1); }
+    .times { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--soft); font-variant-numeric: tabular-nums; }
+
+    .controls { display: flex; align-items: center; justify-content: center; gap: 22px; }
+    .ctrl { width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); background: var(--chip); color: var(--text); display: grid; place-items: center; transition: transform .15s, border-color .2s, color .2s; }
+    .ctrl:hover { border-color: var(--gold); color: var(--gold-text); transform: translateY(-2px); }
+    .ctrl:active { transform: scale(.94); }
+    .ctrl svg { width: 22px; height: 22px; fill: currentColor; }
+    .ctrl.main { width: 72px; height: 72px; background: var(--gold); border: 0; color: var(--on-gold); box-shadow: 0 6px 22px rgba(212, 175, 55, .35); }
+    .ctrl.main:hover { color: var(--on-gold); filter: brightness(1.07); }
+    .ctrl.main svg { width: 30px; height: 30px; }
+    .ctrl.main .ico-pause, .playing .ctrl.main .ico-play { display: none; }
+    .playing .ctrl.main .ico-pause { display: block; }
+
+    .ctrl.loop { width: 44px; height: 44px; }
+    .ctrl.loop svg { width: 20px; height: 20px; }
+    .ctrl.loop[aria-pressed="true"] { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); }
+    .spacer { width: 44px; height: 44px; }
+
+    /* Playlist */
+    .list-head { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 4px 12px; }
+    .list-head h2 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800; }
+    .list-head span { font-size: 13px; font-weight: 700; color: var(--gold-text); }
+    .list { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; list-style: none; }
+    .list li + li { border-top: 1px solid var(--line); }
+    .track { width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 0; background: none; text-align: left; transition: background-color .2s; }
+    .track:hover { background: var(--hover); }
+    .track.active { background: var(--gold-soft); box-shadow: inset 4px 0 0 var(--gold); }
+    .t-num { width: 22px; font-size: 13px; font-weight: 800; color: var(--soft); flex-shrink: 0; }
+    .t-name { flex: 1; font-size: 15px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track.active .t-name, .track.active .t-num { color: var(--gold-text); }
+    .t-state { font-size: 12px; font-weight: 800; color: var(--gold-text); }
+    .msg { padding: 26px 20px; text-align: center; color: var(--soft); font-size: 15px; }
+    .msg.error { color: var(--bad); }
+
+    footer { margin-top: 28px; text-align: center; color: var(--soft); font-size: 13px; font-weight: 600; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
 </head>
 <body>
+<div class="wrap">
 
-  <div class="container">
-
-    <header class="header">
-      <div class="brand-group">
-        <img src="logo.png" alt="RJ Mobile Logo" class="brand-logo" />
-        <div>
-          <div class="brand-title">RJ Mobile</div>
-          <div class="brand-subtitle">Store Audio Broadcaster</div>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="btn-branch" id="btn-change-branch" title="Change Branch">
-          <span class="branch-icon">🏪</span>
-          <span class="branch-name" id="branch-label">Branch</span>
-        </button>
-        <div class="loop-badge">🔁 Auto-Loop</div>
-      </div>
-    </header>
-
-    <div class="player-card">
-      <div class="now-playing-banner">
-        <span class="track-badge" id="current-badge">Loading...</span>
-        <div class="visualizer" id="visualizer">
-          <div class="bar"></div>
-          <div class="bar"></div>
-          <div class="bar"></div>
-          <div class="bar"></div>
-        </div>
-      </div>
-
-      <div class="track-meta">
-        <div class="track-title" id="player-title">Loading playlist...</div>
-      </div>
-
-      <p class="autoplay-hint hidden" id="autoplay-hint">
-        Tap the play button to start audio (browser autoplay policy)
-      </p>
-
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progress-bar">
-          <div class="progress-fill" id="progress-fill"></div>
-        </div>
-        <div class="time-row">
-          <span id="time-current">0:00</span>
-          <span id="time-total">0:00</span>
-        </div>
-      </div>
-
-      <div class="controls-row">
-        <button class="btn-ctrl" id="btn-prev" title="Previous Track" aria-label="Previous Track">⏮</button>
-        <button class="btn-ctrl btn-play-main" id="btn-play" title="Play / Pause" aria-label="Play or Pause">▶</button>
-        <button class="btn-ctrl" id="btn-next" title="Next Track" aria-label="Next Track">⏭</button>
-      </div>
+  <div class="top">
+    <div class="brand">
+      <span class="logo"><img src="logo.png" alt="" onerror="this.style.display='none'" /></span>
+      <div>RJ Mobile<small>Store Audio Broadcaster</small></div>
     </div>
-
-    <div class="playlist-section">
-      <div class="playlist-header">
-        <div class="playlist-title">Playlist</div>
-        <div class="track-count-badge" id="track-count-text">0 Tracks</div>
-      </div>
-
-      <div class="track-list" id="track-list-container">
-        <div class="empty-state">Loading playlist...</div>
-      </div>
-    </div>
-
+    <button id="theme" class="icon-btn" type="button" aria-label="Switch between light and dark theme">
+      <svg class="moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
   </div>
 
-  <!-- Branch selection modal -->
-  <div class="branch-overlay" id="branch-overlay">
-    <div class="branch-modal" role="dialog" aria-labelledby="branch-modal-title" aria-modal="true">
-      <div class="branch-modal-icon">🏪</div>
-      <h2 id="branch-modal-title">Select Your Store Branch</h2>
-      <p>Select your store branch so playback analytics are tracked correctly.</p>
-
-      <div class="branch-form">
-        
-        <!-- Premium Branch List -->
-        <div class="branch-list" id="branch-list">
-          <!-- Buttons will be injected here by JS -->
-        </div>
-
-        <p class="branch-error" id="branch-error"></p>
-
-        <button type="button" class="btn-branch-save" id="btn-branch-save" disabled>Continue</button>
-      </div>
+  <main class="card" id="player">
+    <div class="np-row">
+      <span class="badge" id="badge">Loading…</span>
+      <div class="viz" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </div>
-  </div>
 
-<!-- Audio Engine & Preloader Engine -->
-  <audio id="audio-engine" preload="auto"></audio>
-  <audio id="audio-preloader" preload="auto"></audio>
+    <div class="now" id="now">Loading playlist…</div>
+    <p class="hint" id="hint">Playback is waiting for your input. Please press Play to begin; browsers do not allow audio to start automatically.</p>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Yahan branch.js ko link kiya hai -->
-  <script type="module" src="js/branch.js"></script>
-  
-  <script type="module" src="js/app.js"></script>
+    <div>
+      <div class="seek" id="seek" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+      <div class="times"><span id="cur">0:00</span><span id="tot">0:00</span></div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl loop" id="loop" type="button" aria-pressed="false" aria-label="Repeat current track" title="Repeat current track">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><path d="M11 9h1.6v6h-1.6v-4.2l-1 .5v-1.4z"/></svg>
+      </button>
+      <button class="ctrl" id="prev" type="button" aria-label="Previous track"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+      <button class="ctrl main" id="play" type="button" aria-label="Play or pause">
+        <svg class="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="ico-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button class="ctrl" id="next" type="button" aria-label="Next track"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+      <span class="spacer" aria-hidden="true"></span>
+    </div>
+  </main>
+
+  <div class="list-head"><h2>Playlist</h2><span id="count"></span></div>
+  <ul class="list" id="list"><li class="msg">Loading playlist…</li></ul>
+
+  <footer id="foot">Playlist repeats automatically</footer>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+  /* ------------------------------------------------------------------
+     SETTINGS
+     Songs are detected automatically from the "songs" folder of your
+     GitHub repository (works on GitHub Pages). Nothing to edit when you
+     add or remove songs. Just upload / delete files in the folder.
+     ------------------------------------------------------------------ */
+  const CONFIG = {
+    folder: 'songs',      // folder that contains the audio files
+    owner: '',            // optional: GitHub username (only needed on a custom domain)
+    repo: '',             // optional: repository name (only needed on a custom domain)
+    cacheMinutes: 5,      // how long the detected list is remembered on page load
+    checkMinutes: 10      // how often an open page re-checks the folder for new or removed songs
+  };
+
+  const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac|flac)$/i;
+  const $ = (id) => document.getElementById(id);
+  const audio = $('audio');
+  let tracks = [], index = 0, dragging = false, errorStreak = 0;
+
+  /* ---------- Helpers ---------- */
+  const fmt = (s) => isFinite(s) && s > 0 ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
+  const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toTrack = (file) => ({
+    src: CONFIG.folder + '/' + encodeURIComponent(file),
+    name: file.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim()
+  });
+
+  /* ---------- Playlist detection ---------- */
+  function githubRepo() {
+    if (CONFIG.owner && CONFIG.repo) return { owner: CONFIG.owner, repo: CONFIG.repo };
+    const host = location.hostname;
+    if (!host.endsWith('.github.io')) return null;
+    const owner = host.split('.')[0];
+    const first = location.pathname.split('/').filter(Boolean)[0];
+    return { owner, repo: first && !first.includes('.') ? first : owner + '.github.io' };
+  }
+
+  async function loadSongNames(force) {
+    const cacheKey = 'rj_songs_cache';
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch (e) {}
+    if (!force && cached && Date.now() - cached.time < CONFIG.cacheMinutes * 60000) return cached.files;
+
+    const gh = githubRepo();
+    if (gh) {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${CONFIG.folder}`);
+        if (!res.ok) throw new Error('GitHub API ' + res.status);
+        const files = (await res.json())
+          .filter((f) => f.type === 'file' && AUDIO_EXT.test(f.name))
+          .map((f) => f.name)
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        if (files.length) {
+          try { localStorage.setItem(cacheKey, JSON.stringify({ time: Date.now(), files })); } catch (e) {}
+          return files;
+        }
+      } catch (err) {
+        console.warn('Automatic song detection failed:', err);
+      }
+    }
+    if (cached && cached.files.length) return cached.files;   // stale copy is better than nothing
+    return [];
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderList() {
+    if (!tracks.length) {
+      $('list').innerHTML = '<li class="msg error">No audio files were found in the "' + esc(CONFIG.folder) + '" folder.</li>';
+      return;
+    }
+    $('list').innerHTML = tracks.map((t, n) =>
+      `<li><button class="track ${n === index ? 'active' : ''}" type="button" data-i="${n}">
+         <span class="t-num">${n + 1}</span><span class="t-name">${esc(t.name)}</span>
+         <span class="t-state">${n === index && !audio.paused ? 'Playing' : ''}</span>
+       </button></li>`).join('');
+  }
+
+  function setPlaying(on) {
+    $('player').classList.toggle('playing', on);
+    renderList();
+  }
+
+  /* ---------- Playback ---------- */
+  function load(n, autoplay) {
+    if (!tracks.length) return;
+    index = (n + tracks.length) % tracks.length;
+    const t = tracks[index];
+    audio.src = t.src;
+    $('now').textContent = t.name;
+    $('badge').textContent = `Track ${index + 1} of ${tracks.length}`;
+    $('fill').style.width = '0%';
+    $('cur').textContent = '0:00';
+    $('tot').textContent = '0:00';
+    renderList();
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.name, artist: 'RJ Mobile', album: 'Store Audio Broadcaster', artwork: [{ src: 'logo.png' }] });
+    }
+    if (autoplay) play();
+  }
+
+  function play() {
+    return audio.play().then(() => $('hint').classList.remove('show'))
+                       .catch((err) => { if (err.name === 'NotAllowedError') $('hint').classList.add('show'); });
+  }
+
+  const toggle = () => (audio.paused ? play() : audio.pause());
+
+  audio.addEventListener('play', () => setPlaying(true));
+  audio.addEventListener('pause', () => { if (!audio.ended) setPlaying(false); });
+  audio.addEventListener('playing', () => { errorStreak = 0; });
+  audio.addEventListener('ended', () => load(index + 1, true));       // repeats the playlist indefinitely
+  audio.addEventListener('error', () => {                              // skip unreadable files, but never loop forever
+    if (++errorStreak >= tracks.length) { $('now').textContent = 'Unable to play the audio files.'; return; }
+    setTimeout(() => load(index + 1, true), 800);
+  });
+  audio.addEventListener('loadedmetadata', () => { $('tot').textContent = fmt(audio.duration); });
+  audio.addEventListener('timeupdate', () => {
+    if (dragging || !audio.duration) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    $('fill').style.width = pct + '%';
+    $('seek').setAttribute('aria-valuenow', Math.round(pct));
+    $('cur').textContent = fmt(audio.currentTime);
+  });
+
+  /* ---------- Repeat one track ---------- */
+  $('loop').addEventListener('click', () => {
+    audio.loop = !audio.loop;
+    $('loop').setAttribute('aria-pressed', audio.loop);
+    $('foot').textContent = audio.loop ? 'Repeating the current track' : 'Playlist repeats automatically';
+  });
+
+  /* ---------- Controls ---------- */
+  $('play').addEventListener('click', toggle);
+  $('next').addEventListener('click', () => load(index + 1, true));
+  $('prev').addEventListener('click', () => load(index - 1, true));
+  $('list').addEventListener('click', (e) => {
+    const b = e.target.closest('.track');
+    if (b) load(Number(b.dataset.i), true);
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); toggle(); }
+  });
+
+  // Seek bar (click or drag, mouse and touch)
+  const seek = $('seek');
+  const seekTo = (x) => {
+    const r = seek.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (x - r.left) / r.width));
+    $('fill').style.width = ratio * 100 + '%';
+    if (audio.duration) $('cur').textContent = fmt(ratio * audio.duration);
+    return ratio;
+  };
+  seek.addEventListener('pointerdown', (e) => { dragging = true; seek.classList.add('drag'); seek.setPointerCapture(e.pointerId); seekTo(e.clientX); });
+  seek.addEventListener('pointermove', (e) => { if (dragging) seekTo(e.clientX); });
+  seek.addEventListener('pointerup', (e) => {
+    if (!dragging) return;
+    dragging = false; seek.classList.remove('drag');
+    const ratio = seekTo(e.clientX);
+    if (audio.duration) audio.currentTime = ratio * audio.duration;
+  });
+
+  // Lock-screen / headset controls
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', toggle);
+    navigator.mediaSession.setActionHandler('pause', toggle);
+    navigator.mediaSession.setActionHandler('previoustrack', () => load(index - 1, true));
+    navigator.mediaSession.setActionHandler('nexttrack', () => load(index + 1, true));
+  }
+
+  // Keep the screen awake while the broadcaster is open
+  const wake = () => { if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {}); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wake(); });
+  wake();
+
+  /* ---------- Theme ---------- */
+  $('theme').addEventListener('click', () => {
+    const light = document.documentElement.classList.toggle('light-theme');
+    try { localStorage.setItem('rj_theme', light ? 'light' : 'dark'); } catch (e) {}
+    document.querySelector('meta[name="theme-color"]').content = light ? '#faf8f3' : '#070707';
+  });
+  if (document.documentElement.classList.contains('light-theme')) document.querySelector('meta[name="theme-color"]').content = '#faf8f3';
+
+  /* ---------- Automatic playlist refresh (no page reload needed) ---------- */
+  async function refreshPlaylist() {
+    try {
+      const files = await loadSongNames(true);
+      if (!files.length) return;
+      const next = files.map(toTrack);
+      if (next.map((t) => t.src).join('|') === tracks.map((t) => t.src).join('|')) return;   // nothing changed
+      const current = tracks[index] && tracks[index].src;
+      tracks = next;
+      const found = tracks.findIndex((t) => t.src === current);
+      index = found >= 0 ? found : Math.min(index, tracks.length - 1);   // current song keeps playing
+      $('count').textContent = tracks.length + (tracks.length === 1 ? ' track' : ' tracks');
+      $('badge').textContent = `Track ${index + 1} of ${tracks.length}`;
+      renderList();
+    } catch (e) { console.warn('Playlist refresh failed:', e); }
+  }
+  setInterval(refreshPlaylist, CONFIG.checkMinutes * 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlaylist(); });
+
+  /* ---------- Start ---------- */
+  (async function init() {
+    const files = await loadSongNames();
+    tracks = files.map(toTrack);
+    $('count').textContent = tracks.length + (tracks.length === 1 ? ' track' : ' tracks');
+    if (!tracks.length) { $('now').textContent = 'No tracks available'; $('badge').textContent = 'Empty'; renderList(); return; }
+    load(0, true);
+  })();
+</script>
 </body>
 </html>
